@@ -1,44 +1,58 @@
 import React from "react";
+import axios from "axios";
+import Movie from "./Movie";
+import "./App.css";
 
-//function component는 뭔가를 return 함.
-//class component는 class지만 react component로 부터 확장되고 render method를 가질 수 있음.
-//react는 자동적으로 class component의 render method를 실행함.
 class App extends React.Component {
   state = {
-    count: 0,
+    isLoading: true,
+    movies: [],
   };
 
-  // same as function() {}
-  add = () => {
-    this.setState(current => ({ count: current.count + 1 })); //setState()는 state의 값을 변경할 수 있고, 동시에 render도 새로 호출한다.
-  };
-  minus = () => {
-    this.setState(current => ({ count: current.count - 1 }));
+  // () => {}  ===  function() {}
+  // async function을 쓰면 await 를 이용해서 해당 동작이 완료될 때까지 기다리게 할 수 있음.
+  getMovies = async () => {
+    const {
+      data: {
+        data: { movies },
+      },
+    } = await axios.get(
+      "https://yts-proxy.nomadcoders1.now.sh/list_movies.json?sort_by=rating"
+    );
+    console.log(movies);
+    this.setState({ movies, isLoading: false }); //state movies에 getMovies의 movies 값 넣기 == this.setState({movies:movies})
   };
 
   componentDidMount() {
-    //render 후
-    console.log("Component rendered");
-  }
-
-  componentDidUpdate() {
-    //render 후 업데이트가 일어날 시
-    console.log("I just updated");
-  }
-
-  componentWillUnmount() {
-    //component를 떠날 때
-    console.log("GoodBye.");
+    this.getMovies();
   }
 
   render() {
-    console.log("I'm rendering");
+    // { isLoading} 은 this.state object 안의 isLoading 값을 받아오겠다고 명시한 것.
+    const { isLoading, movies } = this.state;
     return (
-      <div>
-        <h1>The Number is: {this.state.count}</h1>
-        <button onClick={this.add}>Add</button>
-        <button onClick={this.minus}>Minus</button>
-      </div>
+      // JSX에서 HTML 문법인 class="" 를 쓰면 다른 class로 오해할 수 있기 때문에 className을 써줘야 함.
+      <section className="container">
+        {isLoading ? (
+          <div className="loader">
+            <span className="loader__text">Loading...</span>
+          </div>
+        ) : (
+          <div className="movies">
+            {movies.map(movie => (
+              <Movie
+                key={movie.id}
+                id={movie.id}
+                year={movie.year}
+                title={movie.title}
+                summary={movie.summary}
+                genres={movie.genres}
+                poster={movie.medium_cover_image}
+              />
+            ))}
+          </div>
+        )}
+      </section>
     );
   }
 }
